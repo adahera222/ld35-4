@@ -16,5 +16,6 @@ public class GameSettings {
 
 	// particles
 	public static final int MAX_PARTICLES = 1024;
+	public static final float CAT_MAX_DISTANCE_BEFORE_TELEPORTING = 256f;
 
 }

@@ -19,17 +19,17 @@ public class LD28Game extends BaseGame{
 
 	@Override
 	public void load() {
-		///*
+		/*
 		SplashScene splashScene = new SplashScene(GameSettings.WIDTH, GameSettings.HEIGHT);
 		sceneManager.pushScene(splashScene);
 		splashScene.load(new ContentManager(GameSettings.CONTENT_ROOT, true));
-		//*/
+		*/
 
-		/*
+//		/*
 		GameScene gameScene = new GameScene(GameSettings.WIDTH, GameSettings.HEIGHT);
 		sceneManager.pushScene(gameScene);
 		gameScene.load(new ContentManager(GameSettings.CONTENT_ROOT, true));
-		*/
+	//	*/
 	}
 
 	@Override

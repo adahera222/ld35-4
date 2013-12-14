@@ -52,8 +52,20 @@ public class Map extends TmxMap{
 		return null;
 	}
 
-	private TmxLayer waterLayer;
-
+	public int getColumnOfNextCollidableCell(int startCol, int row, boolean goRight) {
+		if(goRight){
+			for (int col = startCol; col < width; col++) {
+				if(collides(col, row))
+					return col;
+			}
+		}else{ // left
+			for (int col = startCol; col >= 0; col--) {
+				if(collides(col, row))
+					return col + 1;
+			}
+		}
+		return goRight ? width : 0;
+	}
 
 	public void update(float dt){
 	}
