@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input.Keys;
 
 import se.skoggy.content.ContentManager;
 import se.skoggy.ld28.scenes.GameScene;
+import se.skoggy.ld28.scenes.SplashScene;
 import se.skoggy.scenes.SceneManager;
 import se.skoggy.utils.BaseGame;
 
@@ -18,16 +19,17 @@ public class LD28Game extends BaseGame{
 
 	@Override
 	public void load() {
-		/*
+		///*
 		SplashScene splashScene = new SplashScene(GameSettings.WIDTH, GameSettings.HEIGHT);
 		sceneManager.pushScene(splashScene);
 		splashScene.load(new ContentManager(GameSettings.CONTENT_ROOT, true));
-		 */
+		//*/
 
+		/*
 		GameScene gameScene = new GameScene(GameSettings.WIDTH, GameSettings.HEIGHT);
 		sceneManager.pushScene(gameScene);
 		gameScene.load(new ContentManager(GameSettings.CONTENT_ROOT, true));
-
+		*/
 	}
 
 	@Override
