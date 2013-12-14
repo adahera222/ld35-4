@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdx.jar" sourcepath="libs/gdx-sources.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.animation"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.audio"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.content"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.entity"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.input"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.particles"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.scenes"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.tmx"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/se.skoggy.utils"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
