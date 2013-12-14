@@ -13,4 +13,7 @@ public class GameSettings {
 	// maps
 	public static final int[] TILES_IGNORE_GOING_UP = new int[]{};
 
+	// particles
+	public static final int MAX_PARTICLES = 1024;
+
 }

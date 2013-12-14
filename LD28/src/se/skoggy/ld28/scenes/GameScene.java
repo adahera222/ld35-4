@@ -15,6 +15,7 @@ import se.skoggy.ld28.behaviors.TorchBehavior;
 import se.skoggy.ld28.characters.PlayerCharacter;
 import se.skoggy.ld28.lightning.Darkness;
 import se.skoggy.ld28.maps.Map;
+import se.skoggy.ld28.particles.ParticleManager;
 import se.skoggy.scenes.Scene;
 import se.skoggy.tmx.TmxMapLoader;
 
@@ -23,6 +24,7 @@ public class GameScene extends Scene{
 	Map map;
 	Darkness darkness;
 	PlayerCharacter player;
+	ParticleManager particleManager;
 
 	public GameScene(float width, float height) {
 		super(width, height);
@@ -54,19 +56,24 @@ public class GameScene extends Scene{
 		map = TmxMapLoader.load(Gdx.files.internal("maps/testmap_1.json").reader(), Map.class);
 		map.load(content);
 
+		particleManager = new ParticleManager();
+		particleManager.load(content);
+
 		darkness = new Darkness(content.loadTexture("gfx/darkness"));
 		darkness.transform.setScale(cam.zoom);
 
+		// TODO: move to factory
 		HashMap<String, Animation> animations = new HashMap<String, Animation>();
 		animations.put("idle", new Animation(new int[]{ 1 }, 500f));
-		animations.put("walk", new Animation(new int[]{ 1 }, 500f));
-		animations.put("jump", new Animation(new int[]{ 0 }, 500f));
+		animations.put("walk", new Animation(new int[]{ 4, 5, 6, 5 }, 150f));
+		animations.put("jump", new Animation(new int[]{ 4 }, 500f));
 		player = new PlayerCharacter(content.loadTexture("gfx/player"), animations, 16, 4);
 		player.addBehavior(new CharacterKeyboardController());
 		player.addBehavior(new TmxMapCollisionBehavior(map));
-		player.addBehavior(new TorchBehavior(content.loadTexture("gfx/torch")));
+		player.addBehavior(new TorchBehavior(content.loadTexture("gfx/torch"), particleManager));
 		player.transform.position.x = 50;
 		player.transform.position.y = 200;
+
 	}
 
 	@Override
@@ -81,6 +88,8 @@ public class GameScene extends Scene{
 		darkness.transform.position.y = cam.position.y;
 		darkness.update(dt);
 
+		particleManager.update(dt);
+
 		super.update(dt);
 	}
 
@@ -90,7 +99,8 @@ public class GameScene extends Scene{
 		sb.begin();
 		map.draw(sb);
 		player.draw(sb);
-		darkness.draw(sb);
+		particleManager.draw(sb);
+		// darkness.draw(sb);
 		sb.end();
 	}
 

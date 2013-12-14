@@ -18,6 +18,7 @@ public class LD28 implements ApplicationListener {
 	public void create() {
 		// Game Settings
 		Texture.setEnforcePotImages(false);
+		Gdx.graphics.setVSync(true);
 
 		game = new LD28Game();
 		game.load();
