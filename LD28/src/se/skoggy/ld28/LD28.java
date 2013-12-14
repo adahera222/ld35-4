@@ -12,19 +12,20 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class LD28 implements ApplicationListener {
 
-
 	LD28Game game;
 
 	@Override
 	public void create() {
-		float w = Gdx.graphics.getWidth();
-		float h = Gdx.graphics.getHeight();
+		// Game Settings
+		Texture.setEnforcePotImages(false);
 
 		game = new LD28Game();
+		game.load();
 	}
 
 	@Override
 	public void dispose() {
+		game.dispose();
 	}
 
 	@Override
