@@ -6,16 +6,17 @@ import java.util.List;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
+import se.skoggy.animation.Animation;
 import se.skoggy.content.ContentManager;
 import se.skoggy.tmx.TmxLayer;
 import se.skoggy.tmx.TmxMap;
+import se.skoggy.tmx.TmxObject;
 
 public class Map extends TmxMap{
 
 	TextureRegion texture;
 	int srcWidth, srcHeight;
 	int colsOnSheet, rowsOnSheet;
-
 
 	public void load(ContentManager content){
 		texture = content.loadTexture("gfx/" + tilesets.get(0).name);
@@ -24,6 +25,18 @@ public class Map extends TmxMap{
 		colsOnSheet = tilesets.get(0).imagewidth / tilesets.get(0).tilewidth;
 		rowsOnSheet = tilesets.get(0).imageheight / tilesets.get(0).tileheight;
 
+		constructObjects();
+	}
+
+	private void constructObjects(){
+		List<TmxLayer> objLayers = getObjectLayers();
+		for (TmxLayer l : objLayers) {
+			for (TmxObject o : l.objects) {
+				if(o.type.equals("player")){
+					// TODO: set player position
+				}
+			}
+		}
 	}
 
 	private TmxLayer collidableLayer;
@@ -37,6 +50,12 @@ public class Map extends TmxMap{
 			}
 		}
 		return null;
+	}
+
+	private TmxLayer waterLayer;
+
+
+	public void update(float dt){
 	}
 
 	/**
@@ -108,6 +127,7 @@ public class Map extends TmxMap{
 			}
 		}
 	}
+
 
 	public void drawBackground(SpriteBatch sb) {
 		for (int l = 0; l < layers.size(); l++) {

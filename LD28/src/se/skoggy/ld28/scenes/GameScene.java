@@ -4,10 +4,12 @@ import java.util.HashMap;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 
 import se.skoggy.animation.Animation;
 import se.skoggy.content.ContentManager;
+import se.skoggy.entity.Entity;
 import se.skoggy.ld28.GameSettings;
 import se.skoggy.ld28.behaviors.CharacterKeyboardController;
 import se.skoggy.ld28.behaviors.TmxMapCollisionBehavior;
@@ -21,10 +23,14 @@ import se.skoggy.tmx.TmxMapLoader;
 
 public class GameScene extends Scene{
 
+	private Matrix4 uiProjectionMatrix;
+
 	Map map;
 	Darkness darkness;
 	PlayerCharacter player;
 	ParticleManager particleManager;
+	Entity blackOverlay;
+	float brightness = 1f;
 
 	public GameScene(float width, float height) {
 		super(width, height);
@@ -32,18 +38,19 @@ public class GameScene extends Scene{
 
 	@Override
 	protected void initCam() {
-		createCam(new Rectangle(0, 0, (int)width, (int)height));
+		createCam(null /* new Rectangle(0, 0, (int)width, (int)height) */);
+		uiProjectionMatrix = new Matrix4(cam.combined);
 		cam.zoom = GameSettings.ZOOM;
 	}
 
 	@Override
 	public float transitionInDuration() {
-		return 0;
+		return 300;
 	}
 
 	@Override
 	public float transitionOutDuration() {
-		return 0;
+		return 3000;
 	}
 
 	@Override
@@ -53,7 +60,7 @@ public class GameScene extends Scene{
 
 	@Override
 	public void load(ContentManager content) {
-		map = TmxMapLoader.load(Gdx.files.internal("maps/testmap_1.json").reader(), Map.class);
+		map = TmxMapLoader.load(Gdx.files.internal("maps/testmap_2.json").reader(), Map.class);
 		map.load(content);
 
 		particleManager = new ParticleManager();
@@ -61,6 +68,9 @@ public class GameScene extends Scene{
 
 		darkness = new Darkness(content.loadTexture("gfx/darkness"));
 		darkness.transform.setScale(cam.zoom);
+
+		blackOverlay = new Entity(content.loadTexture("gfx/black"));
+		blackOverlay.teleport(width * 0.5f, height * 0.5f);
 
 		// TODO: move to factory
 		HashMap<String, Animation> animations = new HashMap<String, Animation>();
@@ -89,6 +99,10 @@ public class GameScene extends Scene{
 		darkness.update(dt);
 
 		particleManager.update(dt);
+		map.update(dt);
+
+		// TODO: fix
+		brightness = (float)Math.sin(dt * 0.03f);
 
 		super.update(dt);
 	}
@@ -97,20 +111,30 @@ public class GameScene extends Scene{
 	public void draw(SpriteBatch sb) {
 		sb.setProjectionMatrix(cam.combined);
 		sb.begin();
-		map.draw(sb);
+		map.drawBackground(sb);
 		player.draw(sb);
 		particleManager.draw(sb);
-		// darkness.draw(sb);
+		map.drawForeground(sb);
+		darkness.draw(sb);
+		sb.end();
+
+		sb.setProjectionMatrix(uiProjectionMatrix);
+		sb.begin();
+		blackOverlay.color.a = 1f - brightness;
+		blackOverlay.draw(sb);
 		sb.end();
 	}
 
 	@Override
 	public void drawTransitionIn(SpriteBatch sb, float progress) {
+		brightness = progress;
+		update(2f);
 		draw(sb);
 	}
 
 	@Override
 	public void drawTransitionOut(SpriteBatch sb, float progress) {
+		brightness = 1f - progress;
 		draw(sb);
 	}
 }

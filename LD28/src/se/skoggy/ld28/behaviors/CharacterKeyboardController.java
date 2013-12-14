@@ -22,7 +22,7 @@ public class CharacterKeyboardController extends EntityBehavior{
 			}else{
 				c.setAnim("idle");
 			}
-			if(Gdx.input.isKeyPressed(Keys.UP) || Gdx.input.isKeyPressed(Keys.SPACE)){
+			if(Gdx.input.isKeyPressed(Keys.UP)){
 				c.jump();
 			}
 		}else{

@@ -12,6 +12,7 @@ public class GameSettings {
 
 	// maps
 	public static final int[] TILES_IGNORE_GOING_UP = new int[]{};
+	public static final float MAX_DISTANCE_FROM_SWITCHER = 16f;
 
 	// particles
 	public static final int MAX_PARTICLES = 1024;
