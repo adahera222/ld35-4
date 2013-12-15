@@ -6,12 +6,12 @@ import se.skoggy.animation.Animation;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-public class PlayerCharacter extends GameCharacter{
+public class FlightObject extends GameCharacter {
 
-	public PlayerCharacter(TextureRegion texture, HashMap<String, Animation> animations, int tileSize, int sheetDimension) {
+	public FlightObject(TextureRegion texture,
+			HashMap<String, Animation> animations, int tileSize,
+			int sheetDimension) {
 		super(texture, animations, tileSize, sheetDimension);
-
-		setAnim("walk");
 	}
 
 }

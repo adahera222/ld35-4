@@ -16,11 +16,8 @@ public class GameCharacter  extends Entity {
 	protected String currentAnimation;
 	protected boolean grounded;
 
-	protected float moveSpeed = 0.0009f;
-	protected float friction = 0.0004f;
-	protected float gravity = GameSettings.GRAVITY;
-	protected float maxSpeed = 0.1f;
-	protected float jumpForce = 0.3f;
+	protected float moveSpeed = 0.0005f;
+	protected float maxSpeed = 0.4f;
 
 	protected int tileSize;
 	protected int sheetDimension;
@@ -33,6 +30,11 @@ public class GameCharacter  extends Entity {
 		currentAnimation = "idle";
 		grounded = false;
 		update(1f);
+	}
+
+	public void multiplySpeed(float multiplier){
+		moveSpeed *= multiplier;
+		maxSpeed *= multiplier;
 	}
 
 	/**
@@ -49,14 +51,12 @@ public class GameCharacter  extends Entity {
 		return null;
 	}
 
-	public void setMovement(float multiplier){
-		moveSpeed *= multiplier;
-		friction *= multiplier;
-		maxSpeed *= multiplier;
-	}
-
-	public void setJumpForce(float jumpForce) {
-		this.jumpForce = jumpForce;
+	public boolean collides(Entity other) {
+		if(left() > other.transform.position.x + other.origin.x * other.transform.scale.x) return false;
+		if(right() < other.transform.position.x - other.origin.x * other.transform.scale.x) return false;
+		if(top() > other.transform.position.y + (other.origin.y * 0.5f) * other.transform.scale.y) return false;
+		if(bottom() < other.transform.position.y - (other.origin.y * 0.5f) * other.transform.scale.y) return false;
+		return true;
 	}
 
 	public float left(){
@@ -110,55 +110,21 @@ public class GameCharacter  extends Entity {
 		}
 	}
 
-	public boolean isGrounded() {
-		return grounded;
-	}
-
-	public void walkLeft(float dt){
-		if(grounded)
-			setAnim("walk");
-		setFlip(true, true);
+	public void goLeft(float dt){
+//		setFlip(true, true);
 		transform.velocity.x -= moveSpeed * dt;
 	}
 
-	public void walkRight(float dt){
-		if(grounded)
-			setAnim("walk");
-		setFlip(false, true);
+	public void goRight(float dt){
+	//	setFlip(false, true);
 		transform.velocity.x += moveSpeed * dt;
 	}
-
-	public void jump(){
-		setAnim("jump");
-		grounded = false;
-		transform.velocity.y = -jumpForce;
+	public void goUp(float dt){
+		transform.velocity.y -= moveSpeed * dt;
 	}
 
-	public void land(){
-		setAnim("idle");
-		grounded = true;
-		transform.velocity.y = 0f;
-	}
-
-	public void fallOff(){
-		setAnim("jump");
-		grounded = false;
-		transform.velocity.y = 0f;
-	}
-
-	protected void updateFriction(float dt){
-		if(transform.velocity.x < 0f){
-			transform.velocity.x += friction * dt;
-			if(transform.velocity.x > 0f){
-				transform.velocity.x = 0f;
-			}
-		}
-		if(transform.velocity.x > 0f){
-			transform.velocity.x -= friction * dt;
-			if(transform.velocity.x < 0f){
-				transform.velocity.x = 0f;
-			}
-		}
+	public void goDown(float dt){
+		transform.velocity.y += moveSpeed * dt;
 	}
 
 	protected void clampSpeed(){
@@ -169,11 +135,17 @@ public class GameCharacter  extends Entity {
 			transform.velocity.x = -maxSpeed;
 		}
 
+		if(transform.velocity.y > maxSpeed){
+			transform.velocity.y = maxSpeed;
+		}
+		if(transform.velocity.y < -maxSpeed){
+			transform.velocity.y = -maxSpeed;
+		}
+
 	}
 
 	@Override
 	public void update(float dt) {
-		updateFriction(dt);
 		clampSpeed();
 
 		transform.position.x += transform.velocity.x * dt;
@@ -184,7 +156,6 @@ public class GameCharacter  extends Entity {
 
 		if(grounded){
 		}else{
-			transform.velocity.y += gravity * dt;
 		}
 
 		animations.get(currentAnimation).update(dt);

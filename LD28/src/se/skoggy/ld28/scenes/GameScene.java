@@ -4,44 +4,55 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import se.skoggy.animation.Animation;
 import se.skoggy.content.ContentManager;
 import se.skoggy.entity.Entity;
+import se.skoggy.entity.Transform;
 import se.skoggy.ld28.GameSettings;
+import se.skoggy.ld28.behaviors.CharacterBoundaryBehavior;
 import se.skoggy.ld28.behaviors.CharacterKeyboardController;
-import se.skoggy.ld28.behaviors.FollowCharacterBehavior;
-import se.skoggy.ld28.behaviors.TmxMapCollisionBehavior;
-import se.skoggy.ld28.behaviors.WalkBackAndForthBehavior;
-import se.skoggy.ld28.characters.Cat;
-import se.skoggy.ld28.characters.Enemy;
+import se.skoggy.ld28.behaviors.GoInOneDirectionBehavior;
+import se.skoggy.ld28.behaviors.ParticleSpawnWhenFallingBehavior;
+import se.skoggy.ld28.characters.FlightObject;
 import se.skoggy.ld28.characters.PlayerCharacter;
-import se.skoggy.ld28.maps.Map;
 import se.skoggy.ld28.particles.ParticleManager;
-import se.skoggy.ld28.weapons.Lazer;
 import se.skoggy.scenes.Scene;
-import se.skoggy.tmx.TmxMapLoader;
 import se.skoggy.utils.Rand;
+import se.skoggy.utils.TimerTrig;
 
 public class GameScene extends Scene{
 
 	private Matrix4 uiProjectionMatrix;
 
-	Map map;
 	PlayerCharacter player;
 	ParticleManager particleManager;
-	List<Cat> cats;
-	Lazer lazer;
 
-	List<Enemy> enemies;
+	List<FlightObject> flightObjects;
+	Entity chute;
+	Entity cloud;
+	List<Transform> clouds;
+	TimerTrig chuteAirTrig = new TimerTrig(80f);
+
+	final static int STATE_FALLING = 0;
+	final static int STATE_DROPPED_CHUTE = 1;
+	final static int STATE_DEPLOYED = 2;
+
+	int state = STATE_FALLING;
+
+	TimerTrig[] sequences = new TimerTrig[]{
+				new TimerTrig(20000f),
+				new TimerTrig(20000f),
+				new TimerTrig(20000f),
+				new TimerTrig(20000f)
+			};
+	int currentSequence = 0;
 
 	// prettiness
 	Entity blackOverlay;
@@ -56,7 +67,7 @@ public class GameScene extends Scene{
 	protected void initCam() {
 		createCam(null /* new Rectangle(0, 0, (int)width, (int)height) */);
 		uiProjectionMatrix = new Matrix4(cam.combined);
-		cam.zoom = GameSettings.ZOOM;
+		cam.zoom = 1f;//GameSettings.ZOOM;
 	}
 
 	@Override
@@ -76,8 +87,6 @@ public class GameScene extends Scene{
 
 	@Override
 	public void load(ContentManager content) {
-		map = TmxMapLoader.load(Gdx.files.internal("maps/testmap_2.json").reader(), Map.class);
-		map.load(content);
 
 		particleManager = new ParticleManager();
 		particleManager.load(content);
@@ -92,95 +101,133 @@ public class GameScene extends Scene{
 		// TODO: move to factory
 		HashMap<String, Animation> animations = new HashMap<String, Animation>();
 		animations.put("idle", new Animation(new int[]{ 0 }, 500f));
-		animations.put("walk", new Animation(new int[]{ 4, 5, 6, 5 }, 150f));
-		animations.put("jump", new Animation(new int[]{ 4 }, 500f));
-		player = new PlayerCharacter(content.loadTexture("gfx/player"), animations, 16, 4);
-		player.transform.setScale(1f);
+		animations.put("walk", new Animation(new int[]{ 0, 1, 4 }, 40f));
+		animations.put("walk_no_chute", new Animation(new int[]{ 2, 3, 6 }, 40f));
+		player = new PlayerCharacter(content.loadTexture("gfx/player"), animations, 32, 4);
+		player.transform.setScale(4f);
 		player.addBehavior(new CharacterKeyboardController());
-		player.addBehavior(new TmxMapCollisionBehavior(map));
-		player.transform.position.x = 50;
-		player.transform.position.y = 200;
+		player.addBehavior(new ParticleSpawnWhenFallingBehavior(particleManager));
+		player.addBehavior(new CharacterBoundaryBehavior(new Rectangle(0,0, width, height)));
+		player.teleport(width * 0.5f, height * 0.2f);
 
-		//laser
-		lazer = new Lazer(player);
+		flightObjects = new ArrayList<FlightObject>();
 
-		cam.position.x = player.transform.position.x;
-		cam.position.y = player.transform.position.y;
+		flightObjects.add(createBird(content));
+		flightObjects.add(createBird(content));
+		flightObjects.add(createBird(content));
+		flightObjects.add(createBird(content));
+		flightObjects.add(createBird(content));
 
-		enemies = new ArrayList<Enemy>();
+		chute = new Entity(content.loadTexture("gfx/parachute"));
+		chute.transform.setScale(4f);
 
-		for (int i = 0; i < 6; i++) {
-			HashMap<String, Animation> anims = new HashMap<String, Animation>();
-			anims.put("idle", new Animation(new int[]{ 0 }, 500f));
-			anims.put("walk", new Animation(new int[]{ 1, 2, 0 }, 100f));
-			anims.put("jump", new Animation(new int[]{ 1 }, 500f));
-			Enemy e = new Enemy(content.loadTexture("gfx/enemy_1"), anims, 16, 2);
-			e.teleport(23, 400);
-			e.addBehavior(new WalkBackAndForthBehavior(map));
-			e.addBehavior(new TmxMapCollisionBehavior(map));
-			enemies.add(e);
+		clouds = new ArrayList<Transform>();
+		cloud = createCloud(content);
+
+		for (int i = 0; i < 8; i++) {
+			Transform t = new Transform();
+			t.position.x = Rand.rand() * width;
+			t.position.y = Rand.rand() * height;
+			t.setScale(2f + Rand.rand() * 3);
+			t.velocity.y = -(0.1f + Rand.rand()) * (t.scale.x * 0.01f);
+			clouds.add(t);
 		}
 
 		super.update(16f);
 
-		cats = new ArrayList<Cat>();
-
-		for (int i = 0; i < 6; i++) {
-			Cat c = createCat(content);
-			c.teleport(player.transform.position.x, player.transform.position.y);
-			cats.add(c);
-		}
 	}
 
-	public Cat createCat(ContentManager content){
+	private FlightObject createBird(ContentManager content){
 		HashMap<String, Animation> animations = new HashMap<String, Animation>();
 		animations.put("idle", new Animation(new int[]{ 0 }, 500f));
-		animations.put("walk", new Animation(new int[]{ 1, 2, 3, 0 }, 80f));
-		animations.put("jump", new Animation(new int[]{ 2 }, 500f));
-		Cat c = new Cat(content.loadTexture("gfx/cat"), animations);
-		c.transform.setScale(0.5f);
-		//c.setColor(new Color(Rand.rand(), Rand.rand(),Rand.rand(), 1f));
-		c.addBehavior(new FollowCharacterBehavior(player.transform.position, map));
-		c.addBehavior(new TmxMapCollisionBehavior(map));
-		return c;
+		animations.put("walk", new Animation(new int[]{ 0, 1 }, 120f));
+		boolean direction = Rand.rand() > 0f;
+		FlightObject obj = new FlightObject(content.loadTexture("gfx/bird"), animations, 16, 2);
+		obj.transform.setScale(2f);
+		obj.addBehavior(new GoInOneDirectionBehavior(direction));
+		obj.teleport(direction ? - 100 : width + 100, Rand.rand() * 720f);
+		obj.setAnim("walk");
+		obj.multiplySpeed(0.3f + Rand.rand() * 0.7f);
+		return obj;
+	}
+
+	private Entity createCloud(ContentManager content){
+		Entity cloud = new Entity(content.loadTexture("gfx/cloud"));
+		return cloud;
+	}
+
+	private void parachuteLost(){
+		player.setAnim("walk_no_chute");
+		chute.teleport(player.transform.position.x, player.transform.position.y);
+		chute.transform.velocity.x = (-0.5f + Rand.rand()) * 0.1f;
+		chute.transform.velocity.y = (-0.5f + Rand.rand()) * 0.1f;
+		state = STATE_DROPPED_CHUTE;
 	}
 
 	private void gameOver(){
-		manager.popScene();
+		// TODO: check if dead or not
+		// manager.popScene();
+	}
+
+	private void nextSequenceTriggered(){
+
 	}
 
 	@Override
 	public void update(float dt) {
 
-		lazer.update(dt, map);
-		if(lazer.isActive()){
-			for (int i = 0; i < cats.size(); i++) {
-				cats.get(i).setTarget(lazer.getTarget());
+		if(currentSequence > sequences.length - 1){
+			gameOver();
+		}else{
+			if(sequences[currentSequence].isTrigged(dt)){
+				currentSequence++;
+				nextSequenceTriggered();
 			}
-
-		}
-
-		for (int i = 0; i < enemies.size(); i++) {
-			Enemy e = enemies.get(i);
-			e.update(dt);
 		}
 
 		player.update(dt);
-		for (int i = 0; i < cats.size(); i++) {
-			cats.get(i).update(dt);
+
+		for (int i = 0; i < flightObjects.size(); i++) {
+			flightObjects.get(i).update(dt);
+
+			if(state == STATE_FALLING){
+				if(flightObjects.get(i).collides(player)){
+					parachuteLost();
+				}
+			}
 		}
 
-		cam.position.x = player.transform.position.x;
-		cam.position.y = player.transform.position.y;
+
+		if(state == STATE_DROPPED_CHUTE){
+			chute.transform.rotation += 0.001f * dt;
+			chute.transform.position.x += chute.transform.velocity.x * dt;
+			chute.transform.position.y += chute.transform.velocity.y * dt;
+			chute.update(dt);
+			if(chuteAirTrig.isTrigged(dt)){
+				particleManager.spawnAir(chute.transform.position.x,  chute.transform.position.y, 8f * 4f);
+			}
+		}
+
+
+		for (int i = 0; i < clouds.size(); i++) {
+			Transform c = clouds.get(i);
+			c.position.y += c.velocity.y * dt;
+			if(c.position.y < -100){
+				c.position.y = height + 200;
+			}
+		}
 
 		particleManager.update(dt);
-		map.update(dt);
 
 		if(isDead()){
 			gameOver();
 		}
 
 		super.update(dt);
+	}
+
+	public float currentSequenceProgress(){
+		return sequences[currentSequence].progress();
 	}
 
 	private boolean isDead(){
@@ -191,26 +238,36 @@ public class GameScene extends Scene{
 	public void draw(SpriteBatch sb) {
 		sb.setProjectionMatrix(cam.combined);
 		sb.begin();
-		map.drawBackground(sb);
-		for (int i = 0; i < enemies.size(); i++) {
-			Enemy e = enemies.get(i);
-			e.draw(sb);
-		}
-		sb.end();
-
-		lazer.draw(cam);
-
-		sb.begin();
-		player.draw(sb);
-		for (int i = 0; i < cats.size(); i++) {
-			cats.get(i).draw(sb);
+		for (int i = 0; i < clouds.size(); i++) {
+			Transform c = clouds.get(i);
+			cloud.transform = c;
+			cloud.draw(sb);
 		}
 		particleManager.draw(sb);
-		map.drawForeground(sb);
+		for (int i = 0; i < flightObjects.size(); i++) {
+			flightObjects.get(i).draw(sb);
+			if(flightObjects.get(i).collides(player)){
+				player.color.r = 1f;
+				player.color.g = 0f;
+				player.color.b = 0f;
+				player.color.r = 1f;
+			}
+		}
+		player.draw(sb);
+
+		player.color.r = 1f;
+		player.color.g = 1f;
+		player.color.b = 1f;
+		player.color.r = 1f;
+
+		if(state == STATE_DROPPED_CHUTE){
+			chute.draw(sb);
+		}
 		sb.end();
 
 		sb.setProjectionMatrix(uiProjectionMatrix);
 		sb.begin();
+		font.draw(sb, "Sequence: " + currentSequence + " : " + (int)(currentSequenceProgress() * 100) + "%", 16, 16);
 		blackOverlay.color.a = 1f - brightness;
 		blackOverlay.draw(sb);
 		sb.end();

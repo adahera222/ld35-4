@@ -36,7 +36,7 @@ public class LD28 implements ApplicationListener {
 			dt = GameSettings.DELTA_MAX_MS_CAP;
 		game.update(dt);
 
-		Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+		Gdx.gl.glClearColor(0.5f, 0.7f, 1f, 1f);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
 		game.draw();

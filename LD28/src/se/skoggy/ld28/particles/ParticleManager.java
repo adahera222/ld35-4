@@ -45,6 +45,32 @@ public class ParticleManager {
 		emitters.add(emitter);
 	}
 
+	public void spawnAir(float x, float y, float width) {
+		for (int i = 0; i < 3; i++) {
+			Particle p = particles.pop();
+			p.owner = null;
+			p.type = 0;
+			p.current = 0f;
+			p.duration = 200f;
+			p.startScale = 1f;
+			p.endScale = 4f;
+			p.rotation = 0f;
+			p.x = x + (-0.5f + Rand.rand()) * width;
+			p.y = y;
+			p.vx = 0f;
+			p.vy = (-3f + Rand.rand()) * 0.6f;
+			p.startColor.r = 1f;
+			p.startColor.g = 1f;
+			p.startColor.b = 1f;
+			p.startColor.a = 0.4f;
+			p.endColor.r = 0f;
+			p.endColor.g = 0f;
+			p.endColor.b = 0f;
+			p.endColor.a = 0f;
+			p.rotationSpeed = 0f;
+		}
+	}
+
 	public void spawnTorchFire(ParticleEmitter emitter){
 		for (int i = 0; i < 2; i++) {
 			Particle p = particles.pop();
@@ -81,8 +107,8 @@ public class ParticleManager {
 				particles.push(i--);
 			}else{
 				if(p.type == 0 || p.type == 1 || p.type == 2){
-					p.x += Helpers.lerp(p.vx, 0f, progress) * dt;
-					p.y += Helpers.lerp(p.vy, 0f, progress) * dt;
+					p.x += p.vx * dt;
+					p.y += p.vy * dt;
 					p.rotation += p.rotationSpeed * dt;
 
 					p.scale = Helpers.lerp(p.startScale, p.endScale, progress);
@@ -122,4 +148,5 @@ public class ParticleManager {
 		}
 		sb.setBlendFunction(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 	}
+
 }
