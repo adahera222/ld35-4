@@ -18,20 +18,20 @@ public class CharacterBoundaryBehavior extends EntityBehavior {
 	@Override
 	public void Update(float dt, Entity owner) {
 		GameCharacter c = (GameCharacter)owner;
-		if(c.left() < area.x){
-			c.transform.position.x = area.x + c.origin.x * c.transform.scale.x;
+		if(c.transform.position.x < area.x){
+			c.transform.position.x = area.x;
 			c.transform.velocity.x = 0f;
 		}
-		if(c.right() > area.x + area.width){
-			c.transform.position.x = (area.x + area.width) - c.origin.x * c.transform.scale.x;
+		if(c.transform.position.x > area.x + area.width){
+			c.transform.position.x = (area.x + area.width);
 			c.transform.velocity.x = 0f;
 		}
-		if(c.top() < area.y){
-			c.transform.position.y = area.y + c.origin.y * c.transform.scale.y;
+		if(c.transform.position.y < area.y){
+			c.transform.position.y = area.y;
 			c.transform.velocity.y = 0f;
 		}
-		if(c.bottom() > area.x + area.height){
-			c.transform.position.y = (area.y + area.height) - c.origin.y * c.transform.scale.y;
+		if(c.transform.position.y > area.x + area.height){
+			c.transform.position.y = (area.y + area.height);
 			c.transform.velocity.y = 0f;
 		}
 	}

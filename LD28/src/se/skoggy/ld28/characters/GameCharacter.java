@@ -54,8 +54,8 @@ public class GameCharacter  extends Entity {
 	public boolean collides(Entity other) {
 		if(left() > other.transform.position.x + other.origin.x * other.transform.scale.x) return false;
 		if(right() < other.transform.position.x - other.origin.x * other.transform.scale.x) return false;
-		if(top() > other.transform.position.y + (other.origin.y * 0.5f) * other.transform.scale.y) return false;
-		if(bottom() < other.transform.position.y - (other.origin.y * 0.5f) * other.transform.scale.y) return false;
+		if(top() > other.transform.position.y + other.origin.y * other.transform.scale.y) return false;
+		if(bottom() < other.transform.position.y - other.origin.y * other.transform.scale.y) return false;
 		return true;
 	}
 
@@ -66,10 +66,10 @@ public class GameCharacter  extends Entity {
 		return transform.position.x + origin.x * transform.scale.x;
 	}
 	public float top(){
-		return transform.position.y - origin.y * transform.scale.y;
+		return transform.position.y - (origin.y * 0.1f) * transform.scale.y;
 	}
 	public float bottom(){
-		return transform.position.y + origin.y * transform.scale.y;
+		return transform.position.y + (origin.y * 0.1f) * transform.scale.y;
 	}
 	public float halfHeight(){
 		return (origin.y * transform.scale.y);

@@ -14,4 +14,13 @@ public class PlayerCharacter extends GameCharacter{
 		setAnim("walk");
 	}
 
+	public void updateWithoutBehaviors(float dt) {
+
+		animations.get(currentAnimation).update(dt);
+		int frame = animations.get(currentAnimation).getFrame();
+		int col = (frame % sheetDimension);
+		int row = (frame / sheetDimension);
+		setSource(col * tileSize, row * tileSize, tileSize, tileSize);
+	}
+
 }
